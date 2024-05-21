@@ -8,7 +8,7 @@ header('Content-Type: application/json');
 // URL to fetch data from Service 1
 $service1Url = 'http://localhost/three_crypto_APIs/service1/index.php';
 
-// Function to perform GET request using file_get_contents
+// Function to perform GET request 
 function fetchData($url) {
     $response = file_get_contents($url);
     if ($response === FALSE) {
@@ -21,7 +21,7 @@ function fetchData($url) {
     return $data;
 }
 
-// Fetch data from Service 1
+// Fetch data from Service 1 to Service 2
 $data = fetchData($service1Url);
 if ($data === false) {
     http_response_code(500);
@@ -31,3 +31,32 @@ if ($data === false) {
 
 // Output fetched data for debugging
 echo json_encode(['success' => true, 'data' => $data]);
+
+// Section to send data to Service 3
+$service3Url = 'http://localhost/three_crypto_APIs/service3/receive.php';
+
+function sendData($url, $data) {
+    $options = [
+        'http' => [
+            'header'  => "Content-Type: application/json\r\n",
+            'method'  => 'POST',
+            'content' => json_encode($data)
+        ],
+    ];
+    $context  = stream_context_create($options);
+    $response = file_get_contents($url, false, $context);
+    if ($response === FALSE) {
+        return false;
+    }
+    return json_decode($response, true);
+}
+
+$response = sendData($service3Url, $data);
+if ($response === false) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Unable to send data to Service 3']);
+    exit();
+}
+
+echo json_encode(['success' => true, 'response' => $response]);
+?>
